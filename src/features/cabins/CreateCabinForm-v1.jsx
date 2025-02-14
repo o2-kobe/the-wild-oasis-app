@@ -1,8 +1,7 @@
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEditCabin } from "../../services/apiCabins";
-import PropTypes from "prop-types";
+import { createCabin } from "../../services/apiCabins";
 
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
@@ -11,20 +10,13 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import FormRow from "../../ui/FormRow";
 
-function CreateCabinForm({ cabinToEdit = {} }) {
-  // in here we receive the object from the cabin and then we check whether the form will be used for editing or for creating a new cabin. The isEditSession is to convert the availability of an id into a boolean and with that assign defaultValues to the form also
-  const { id: editId, ...editValues } = cabinToEdit;
-  const isEditSession = Boolean(editId);
-
-  const { register, handleSubmit, reset, getValues, formState } = useForm({
-    defaultValues: isEditSession ? editValues : {},
-  });
-
+function CreateCabinForm() {
+  const { register, handleSubmit, reset, getValues, formState } = useForm();
   const { errors } = formState; //the form state is from the useForm and it gives us access to the state of the form and it errors
   const queryClient = useQueryClient();
 
-  const { mutate: createCabin, isLoading: isCreating } = useMutation({
-    mutationFn: createEditCabin,
+  const { mutate, isLoading: isCreating } = useMutation({
+    mutationFn: createCabin,
     onSuccess: () => {
       toast.success("New cabin successfully created");
       queryClient.invalidateQueries({ queryKey: ["cabin"] });
@@ -35,25 +27,8 @@ function CreateCabinForm({ cabinToEdit = {} }) {
     },
   });
 
-  const { mutate: editCabin, isLoading: isEditing } = useMutation({
-    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id),
-    onSuccess: () => {
-      toast.success("Cabin successfully edited");
-      queryClient.invalidateQueries({ queryKey: ["cabin"] });
-      reset(); //this is a funciton given to us by the react-hook-form and it used to empty all the fields within the form
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const isWorking = isCreating || isEditing;
-
   function onSubmit(data) {
-    const image = typeof data.image === "string" ? data.image : data.image[0];
-    if (isEditSession)
-      editCabin({ newCabinData: { ...data, image }, id: editId });
-    else createCabin({ ...data, image: data.image[0] });
+    mutate({ ...data, image: data.image[0] });
   }
 
   function onError(error) {
@@ -66,7 +41,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Input
           type="text"
           id="name"
-          disabled={isWorking}
+          disabled={isCreating}
           {...register("name", { required: "This field is required" })}
         />
       </FormRow>
@@ -75,7 +50,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Input
           type="number"
           id="maxCapacity"
-          disabled={isWorking}
+          disabled={isCreating}
           {...register("maxCapacity", {
             required: "This field is required",
             min: { value: 1, mesage: "Capacity should be at least 1" },
@@ -87,7 +62,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Input
           type="number"
           id="regularPrice"
-          disabled={isWorking}
+          disabled={isCreating}
           {...register("regularPrice", {
             required: "This field is required",
             min: { value: 1, message: "Price should be at least 1" },
@@ -99,7 +74,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Input
           type="number"
           id="discount"
-          disabled={isWorking}
+          disabled={isCreating}
           defaultValue={0}
           {...register("discount", {
             required: "This field is required",
@@ -119,7 +94,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <Textarea
           type="number"
           id="description"
-          disabled={isWorking}
+          disabled={isCreating}
           defaultValue=""
           {...register("description", { required: "This field is required" })}
         />
@@ -129,29 +104,21 @@ function CreateCabinForm({ cabinToEdit = {} }) {
         <FileInput
           id="image"
           accept="image/*"
-          {...register("image", {
-            required: isEditSession ? false : "This field is required",
-          })}
+          {...register("image", { required: "This field is required" })}
         />
       </FormRow>
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button disabled={isWorking} variation="secondary" type="reset">
+        <Button disabled={isCreating} variation="secondary" type="reset">
           {" "}
           {/*defining the type to be reset makes it work to clear all the inputs
           in the data field as the name says Cancel*/}
         </Button>
-        <Button size="medium">
-          {isEditSession ? "Edit Cabin" : "Create new cabin"}
-        </Button>
+        <Button size="medium">Add cabin</Button>
       </FormRow>
     </Form>
   );
 }
-
-CreateCabinForm.propTypes = {
-  cabinToEdit: PropTypes.object,
-};
 
 export default CreateCabinForm;
