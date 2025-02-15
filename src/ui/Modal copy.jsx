@@ -2,7 +2,6 @@ import styled from "styled-components";
 import PropTypes from "prop-types";
 import { HiXMark } from "react-icons/hi2";
 import { createPortal } from "react-dom";
-import { cloneElement, createContext, useContext, useState } from "react";
 
 const StyledModal = styled.div`
   position: fixed;
@@ -53,38 +52,14 @@ const Button = styled.button`
   }
 `;
 
-const ModalContext = createContext();
-
-function Modal({ children }) {
-  const [openName, setOpenName] = useState("");
-  const close = () => setOpenName("");
-  const open = setOpenName;
-
-  return (
-    <ModalContext.Provider value={{ close, open, openName }}>
-      {children}
-    </ModalContext.Provider>
-  );
-}
-
-function Open({ children, opens: openWindowName }) {
-  const { open } = useContext(ModalContext);
-
-  return cloneElement(children, { onClick: () => open(openWindowName) });
-  //because we cannot access the child element itself and attach the onClick prop to it, we have to Clone the element using the "cloneElement" from react and attach the onClick property to the element
-}
-
-function Window({ children, name }) {
-  const { openName, close } = useContext(ModalContext);
-
-  if (name !== openName) return null;
+function Modal({ children, onClose }) {
   return createPortal(
     <Overlay>
       <StyledModal>
-        <Button onClick={close}>
+        <Button onClick={onClose}>
           <HiXMark />
         </Button>
-        <div>{cloneElement(children, { onCloseModal: close })}</div>
+        <div>{children}</div>
       </StyledModal>
     </Overlay>,
     document.body
@@ -97,13 +72,5 @@ Modal.propTypes = {
   children: PropTypes.node.isRequired,
   onClose: PropTypes.func.isRequired,
 };
-
-Window.propTypes = {
-  children: PropTypes.node.isRequired,
-  name: PropTypes.string.isRequired,
-};
-
-Modal.Open = Open;
-Modal.Window = Window;
 
 export default Modal;

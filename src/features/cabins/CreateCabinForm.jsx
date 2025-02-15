@@ -1,7 +1,4 @@
 import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createEditCabin } from "../../services/apiCabins";
 import PropTypes from "prop-types";
 
 import Input from "../../ui/Input";
@@ -10,8 +7,10 @@ import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import FormRow from "../../ui/FormRow";
+import { useCreateCabin } from "./useCreateCabin";
+import { useEditCabin } from "./useEditCabin";
 
-function CreateCabinForm({ cabinToEdit = {} }) {
+function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
   // in here we receive the object from the cabin and then we check whether the form will be used for editing or for creating a new cabin. The isEditSession is to convert the availability of an id into a boolean and with that assign defaultValues to the form also
   const { id: editId, ...editValues } = cabinToEdit;
   const isEditSession = Boolean(editId);
@@ -21,39 +20,24 @@ function CreateCabinForm({ cabinToEdit = {} }) {
   });
 
   const { errors } = formState; //the form state is from the useForm and it gives us access to the state of the form and it errors
-  const queryClient = useQueryClient();
-
-  const { mutate: createCabin, isLoading: isCreating } = useMutation({
-    mutationFn: createEditCabin,
-    onSuccess: () => {
-      toast.success("New cabin successfully created");
-      queryClient.invalidateQueries({ queryKey: ["cabin"] });
-      reset(); //this is a funciton given to us by the react-hook-form and it used to empty all the fields within the form
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const { mutate: editCabin, isLoading: isEditing } = useMutation({
-    mutationFn: ({ newCabinData, id }) => createEditCabin(newCabinData, id),
-    onSuccess: () => {
-      toast.success("Cabin successfully edited");
-      queryClient.invalidateQueries({ queryKey: ["cabin"] });
-      reset(); //this is a funciton given to us by the react-hook-form and it used to empty all the fields within the form
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
+  const { isCreating, createCabin } = useCreateCabin();
+  const { isEditing, editCabin } = useEditCabin();
 
   const isWorking = isCreating || isEditing;
 
   function onSubmit(data) {
     const image = typeof data.image === "string" ? data.image : data.image[0];
     if (isEditSession)
-      editCabin({ newCabinData: { ...data, image }, id: editId });
-    else createCabin({ ...data, image: data.image[0] });
+      editCabin(
+        { newCabinData: { ...data, image }, id: editId },
+        {
+          onSuccess: () => {
+            reset();
+            onCloseModal?.();
+          },
+        }
+      );
+    else createCabin({ ...data, image: image }, { onSuccess: () => reset() });
   }
 
   function onError(error) {
@@ -61,7 +45,10 @@ function CreateCabinForm({ cabinToEdit = {} }) {
   }
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit, onError)}>
+    <Form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      type={onCloseModal ? "modal" : "regular"}
+    >
       <FormRow label="Cabin name" error={errors?.name?.message}>
         <Input
           type="text"
@@ -137,10 +124,15 @@ function CreateCabinForm({ cabinToEdit = {} }) {
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button disabled={isWorking} variation="secondary" type="reset">
-          {" "}
+        <Button
+          disabled={isWorking}
+          variation="secondary"
+          type="reset"
+          onClick={() => onCloseModal?.()}
+        >
           {/*defining the type to be reset makes it work to clear all the inputs
           in the data field as the name says Cancel*/}
+          Cancel
         </Button>
         <Button size="medium">
           {isEditSession ? "Edit Cabin" : "Create new cabin"}
@@ -152,6 +144,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
 
 CreateCabinForm.propTypes = {
   cabinToEdit: PropTypes.object,
+  onCloseModal: PropTypes.func,
 };
 
 export default CreateCabinForm;

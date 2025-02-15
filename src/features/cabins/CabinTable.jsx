@@ -1,8 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
-import { getCabins } from "../../services/apiCabins";
 import CabinRow from "./CabinRow";
 import Spinner from "../../ui/Spinner";
 import styled from "styled-components";
+import { useCabin } from "./useCabin";
 
 const Table = styled.div`
   border: 1px solid var(--color-grey-200);
@@ -29,13 +28,13 @@ const TableHeader = styled.header`
 `;
 
 function CabinTable() {
-  const { isLoading, data: cabins } = useQuery({
-    queryKey: ["cabin"],
-    queryFn: getCabins,
-  }); //the useQuery is used when we have to or want to fetch the data from the api, and it gives us access to the isLoading state, and also the potential error
+  // const { isLoading, data: cabins } = useQuery({
+  //   queryKey: ["cabin"],
+  //   queryFn: getCabins,
+  // }); //the useQuery is used when we have to or want to fetch the data from the api, and it gives us access to the isLoading state, and also the potential error
 
+  const { isLoading, cabins } = useCabin();
   if (isLoading) return <Spinner />;
-  // console.log(error);
 
   return (
     <Table role="table">
