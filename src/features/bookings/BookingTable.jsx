@@ -2,21 +2,12 @@ import BookingRow from "./BookingRow";
 import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
 import Empty from "../../ui/Empty";
+import Pagination from "../../ui/Pagination";
 import Spinner from "../../ui/Spinner";
-import { useQuery } from "@tanstack/react-query";
-import { getBookings } from "../../services/apiBookings";
+import { useBookings } from "./useBookings";
 
 function BookingTable() {
-  const {
-    data: bookings,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["bookings"],
-    queryFn: getBookings,
-  });
-
-  console.log(bookings);
+  const { bookings, isLoading, error, count } = useBookings();
 
   if (error) return <p>No bookings was found</p>;
   if (isLoading) return <Spinner />;
@@ -40,6 +31,10 @@ function BookingTable() {
             <BookingRow key={booking.id} booking={booking} />
           )}
         />
+
+        <Table.Footer>
+          <Pagination count={count} />
+        </Table.Footer>
       </Table>
     </Menus>
   );
