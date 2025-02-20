@@ -1,9 +1,26 @@
 import BookingRow from "./BookingRow";
 import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
+import Empty from "../../ui/Empty";
+import Spinner from "../../ui/Spinner";
+import { useQuery } from "@tanstack/react-query";
+import { getBookings } from "../../services/apiBookings";
 
 function BookingTable() {
-  const bookings = [];
+  const {
+    data: bookings,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["bookings"],
+    queryFn: getBookings,
+  });
+
+  console.log(bookings);
+
+  if (error) return <p>No bookings was found</p>;
+  if (isLoading) return <Spinner />;
+  if (bookings?.length === 0) return <Empty resourceName="bookings" />;
 
   return (
     <Menus>

@@ -1,4 +1,7 @@
+import { useSearchParams } from "react-router-dom";
 import styled, { css } from "styled-components";
+
+import PropTypes from "prop-types";
 
 const StyledFilter = styled.div`
   border: 1px solid var(--color-grey-100);
@@ -33,3 +36,38 @@ const FilterButton = styled.button`
     color: var(--color-brand-50);
   }
 `;
+
+function Filter({ filterField, options }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  // with the useSearchParams hook, it allows us to get and also set parts of the url depeneding on the values we pass in
+  // to set a param thus something like movie?genre='fiction'........then from the useSearchParams, we extract the searchParams and the setSearchParams. then on an event, we set it like this searchParams.set(name, value), after that we have to update what has been set using the setSearchParams(searchParams), this will update and that's the final peice
+  // in the case where we also want to use the Params within the url we do :........: const genre = searchParams.get("genre")
+  const currentFilter = searchParams.get(filterField) || options[0].value;
+
+  function handleClick(value) {
+    searchParams.set(filterField, value);
+    setSearchParams(searchParams);
+  }
+
+  return (
+    <StyledFilter>
+      {options.map((option) => (
+        <FilterButton
+          key={option.value}
+          onClick={() => handleClick(option.value)}
+          active={option.value === currentFilter}
+          disabled={option.value === currentFilter}
+        >
+          {option.label}
+        </FilterButton>
+      ))}
+    </StyledFilter>
+  );
+}
+
+Filter.propTypes = {
+  filterField: PropTypes.string,
+  options: PropTypes.array,
+};
+
+export default Filter;

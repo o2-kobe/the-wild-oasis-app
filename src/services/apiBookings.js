@@ -1,6 +1,21 @@
 import { getToday } from "../utils/helpers";
 import supabase from "./supabase";
 
+export async function getBookings() {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(
+      "id, created_at, startDate, endDate, numNights,numGuests, status, totalPrice, cabins(name), guests(fullName, email)"
+    ); //we use this method to extract from all the bookings the foreign keys also that's the name from the cabin and the fullname and email from the guests
+
+  if (error) {
+    console.error(error);
+    throw new Error("No bookings found");
+  }
+
+  return data;
+}
+
 export async function getBooking(id) {
   const { data, error } = await supabase
     .from("bookings")
