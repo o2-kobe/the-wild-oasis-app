@@ -4,9 +4,13 @@ import PropTypes from "prop-types";
 
 import Tag from "../../ui/Tag";
 import Table from "../../ui/Table";
+import Menus from "../../ui/Menus";
 
 import { formatCurrency } from "../../utils/helpers";
 import { formatDistanceFromNow } from "../../utils/helpers";
+import { HiArrowDownOnSquare, HiArrowUpOnSquare, HiEye } from "react-icons/hi2";
+import { useNavigate } from "react-router-dom";
+import { useCheckout } from "../check-in-out/useCheckout";
 
 const Cabin = styled.div`
   font-size: 1.6rem;
@@ -37,7 +41,7 @@ const Amount = styled.div`
 
 function BookingRow({
   booking: {
-    // id: bookingId,
+    id: bookingId,
     // created_at,
     startDate,
     endDate,
@@ -54,6 +58,9 @@ function BookingRow({
     "checked-in": "green",
     "checked-out": "silver",
   };
+
+  const navigate = useNavigate();
+  const { checkout, isCheckingOut } = useCheckout();
 
   return (
     <Table.Row>
@@ -80,13 +87,47 @@ function BookingRow({
       <Tag type={statusToTagName[status]}>{status.replace("-", " ")}</Tag>
 
       <Amount>{formatCurrency(totalPrice)}</Amount>
+
+      <Menus.Menu>
+        <Menus.Toggle id={bookingId} />
+        <Menus.List id={bookingId}>
+          <Menus.Button
+            onClick={() => navigate(`/bookings/${bookingId}`)}
+            icon={<HiEye />}
+          >
+            See details
+          </Menus.Button>
+
+          {status === "unconfirmed" && (
+            <Menus.Button
+              onClick={() => navigate(`/checkin/${bookingId}`)}
+              icon={<HiArrowDownOnSquare />}
+            >
+              Check in
+            </Menus.Button>
+          )}
+          {status === "checked-in" && (
+            <Menus.Button
+              onClick={() => {
+                checkout(bookingId);
+              }}
+              disabled={isCheckingOut}
+              icon={<HiArrowUpOnSquare />}
+            >
+              Check out
+            </Menus.Button>
+          )}
+
+          <Menus.Button></Menus.Button>
+        </Menus.List>
+      </Menus.Menu>
     </Table.Row>
   );
 }
 
 BookingRow.propTypes = {
   booking: PropTypes.shape({
-    // id: PropTypes.string,
+    id: PropTypes.string,
     // created_at: PropTypes.string,
     startDate: PropTypes.string,
     endDate: PropTypes.string,

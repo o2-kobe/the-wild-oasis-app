@@ -3,9 +3,11 @@ import { format, isToday } from "date-fns";
 import {
   HiOutlineChatBubbleBottomCenterText,
   HiOutlineCheckCircle,
-  HiOutlineCurrencyDollar,
+  // HiOutlineCurrencyDollar,
   HiOutlineHomeModern,
 } from "react-icons/hi2";
+
+import PropTypes from "prop-types";
 
 import DataItem from "../../ui/DataItem";
 import { Flag } from "../../ui/Flag";
@@ -164,7 +166,7 @@ function BookingDataBox({ booking }) {
         </DataItem>
 
         <Price isPaid={isPaid}>
-          <DataItem icon={<HiOutlineCurrencyDollar />} label={`Total price`}>
+          <DataItem icon={<span>₵</span>} label={`Total price`}>
             {formatCurrency(totalPrice)}
 
             {hasBreakfast &&
@@ -183,5 +185,31 @@ function BookingDataBox({ booking }) {
     </StyledBookingDataBox>
   );
 }
+
+BookingDataBox.propTypes = {
+  booking: PropTypes.shape({
+    created_at: PropTypes.string,
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
+    numNights: PropTypes.number,
+    numGuests: PropTypes.number,
+    cabinPrice: PropTypes.number,
+    extrasPrice: PropTypes.number,
+    totalPrice: PropTypes.number,
+    hasBreakfast: PropTypes.bool,
+    observations: PropTypes.string,
+    isPaid: PropTypes.bool,
+    guests: PropTypes.shape({
+      fullName: PropTypes.string,
+      email: PropTypes.string,
+      country: PropTypes.string,
+      countryFlag: PropTypes.string,
+      nationalID: PropTypes.string,
+    }),
+    cabins: PropTypes.shape({
+      name: PropTypes.string,
+    }),
+  }),
+};
 
 export default BookingDataBox;
